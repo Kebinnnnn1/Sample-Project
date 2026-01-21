@@ -18,10 +18,6 @@ public class CameraFOV : MonoBehaviour
     void Update()
     {
         float targetFOV = player.IsSprinting ? sprintFOV : normalFOV;
-        cam.fieldOfView = Mathf.Lerp(
-            cam.fieldOfView,
-            targetFOV,
-            fovSpeed * Time.deltaTime
-        );
+        cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, targetFOV, fovSpeed * Time.deltaTime);
     }
 }

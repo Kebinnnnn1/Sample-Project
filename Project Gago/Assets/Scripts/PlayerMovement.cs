@@ -29,7 +29,9 @@ public class PlayerMovement : MonoBehaviour
     CharacterController controller;
     Vector3 velocity;
     Vector3 moveVelocity;
+
     bool isGrounded;
+    bool isCrouching;
 
     void Awake()
     {
@@ -39,8 +41,8 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         GroundCheck();
-        Move();
         Crouch();
+        Move();
         GravityAndJump();
         AutoJump();
     }
@@ -53,18 +55,21 @@ public class PlayerMovement : MonoBehaviour
         float x = Input.GetAxisRaw("Horizontal");
         float z = Input.GetAxisRaw("Vertical");
 
-        Vector3 input = transform.right * x + transform.forward * z;
-        input.Normalize();
+        Vector3 input = (transform.right * x + transform.forward * z).normalized;
 
-        bool sprint = Input.GetKey(KeyCode.LeftShift);
-        bool crouch = Input.GetKey(KeyCode.LeftControl);
+        bool sprintInput = Input.GetKey(KeyCode.LeftShift);
+        bool sprinting = sprintInput && !isCrouching && input.magnitude > 0.1f;
 
         float speed = walkSpeed;
-        if (crouch) speed = crouchSpeed;
-        else if (sprint) speed = sprintSpeed;
+        if (isCrouching) speed = crouchSpeed;
+        else if (sprinting) speed = sprintSpeed;
 
-        Vector3 target = input * speed;
-        moveVelocity = Vector3.Lerp(moveVelocity, target, acceleration * Time.deltaTime);
+        Vector3 targetVelocity = input * speed;
+        moveVelocity = Vector3.Lerp(
+            moveVelocity,
+            targetVelocity,
+            acceleration * Time.deltaTime
+        );
 
         controller.Move(moveVelocity * Time.deltaTime);
     }
@@ -77,7 +82,7 @@ public class PlayerMovement : MonoBehaviour
         if (isGrounded && velocity.y < 0)
             velocity.y = -2f;
 
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded && !isCrouching)
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
 
         velocity.y += gravity * Time.deltaTime;
@@ -101,8 +106,14 @@ public class PlayerMovement : MonoBehaviour
     // =============================
     void Crouch()
     {
-        float targetHeight = Input.GetKey(KeyCode.LeftControl) ? crouchHeight : standingHeight;
-        controller.height = Mathf.Lerp(controller.height, targetHeight, crouchSmooth * Time.deltaTime);
+        isCrouching = Input.GetKey(KeyCode.LeftControl);
+
+        float targetHeight = isCrouching ? crouchHeight : standingHeight;
+        controller.height = Mathf.Lerp(
+            controller.height,
+            targetHeight,
+            crouchSmooth * Time.deltaTime
+        );
     }
 
     // =============================
@@ -110,7 +121,8 @@ public class PlayerMovement : MonoBehaviour
     // =============================
     void AutoJump()
     {
-        if (!isGrounded || moveVelocity.magnitude < 0.1f) return;
+        if (!isGrounded || moveVelocity.magnitude < 0.1f || isCrouching)
+            return;
 
         RaycastHit hit;
         Vector3 origin = transform.position + Vector3.up * 0.3f;
@@ -129,32 +141,24 @@ public class PlayerMovement : MonoBehaviour
     void OnControllerColliderHit(ControllerColliderHit hit)
     {
         Rigidbody rb = hit.collider.attachedRigidbody;
+        if (rb == null || rb.isKinematic) return;
+        if (hit.moveDirection.y < -0.3f) return;
+        if (moveVelocity.magnitude < 0.1f) return;
 
-        if (rb == null || rb.isKinematic)
-            return;
-
-        if (hit.moveDirection.y < -0.3f)
-            return;
-
-        if (moveVelocity.magnitude < 0.1f)
-            return;
-
-        Vector3 pushDir = new Vector3(
-            hit.moveDirection.x,
-            0f,
-            hit.moveDirection.z
-        ).normalized;
-
+        Vector3 pushDir = new Vector3(hit.moveDirection.x, 0f, hit.moveDirection.z).normalized;
         float speedFactor = Mathf.Clamp01(moveVelocity.magnitude / sprintSpeed);
-        Vector3 force = pushDir * pushForce * speedFactor;
 
-        rb.AddForce(force, ForceMode.Force);
+        rb.AddForce(pushDir * pushForce * speedFactor, ForceMode.Force);
     }
 
     // =============================
-    // PUBLIC STATES (FOR CAMERA / AUDIO)
+    // PUBLIC STATES
     // =============================
     public bool IsGrounded => isGrounded;
     public bool IsMoving => moveVelocity.magnitude > 0.1f;
-    public bool IsSprinting => Input.GetKey(KeyCode.LeftShift);
+    public bool IsCrouching => isCrouching;
+    public bool IsSprinting =>
+        Input.GetKey(KeyCode.LeftShift) &&
+        !isCrouching &&
+        IsMoving;
 }
