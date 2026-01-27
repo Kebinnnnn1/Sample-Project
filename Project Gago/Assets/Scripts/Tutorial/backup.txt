@@ -1,0 +1,207 @@
+using UnityEngine;
+using System.Collections;
+
+public class TutorialManager : MonoBehaviour
+{
+    [Header("Intro")]
+    public TutorialStep[] introSteps;
+
+    [Header("Tutorial Steps")]
+    public TutorialStep[] tutorialSteps;
+
+    [Header("Final Completion")]
+    [TextArea(2, 4)]
+    public string finalCompletionMessage = "Tutorial complete!";
+    public float finalCompletionTypingSpeed = 0.03f;
+    public float finalCompletionDelay = 1f;
+
+    [Header("References")]
+    public TypingTextUI typingUI;
+    public AudioSource audioSource;
+    public PlayerMovement playerMovement;
+    public MouseLook mouseLook;
+
+    int stepIndex;
+    bool canCheckCondition;
+
+    // 🔒 Ability locks
+    bool allowMove;
+    bool allowJump;
+    bool allowCrouch;
+    bool allowLook;
+
+    // ✅ Cached original values
+    float baseWalkSpeed;
+    float baseSprintSpeed;
+    float baseCrouchSpeed;
+    float baseJumpHeight;
+    float baseCrouchHeight;
+
+    void Start()
+    {
+        // Cache original values ONCE
+        baseWalkSpeed   = playerMovement.walkSpeed;
+        baseSprintSpeed = playerMovement.sprintSpeed;
+        baseCrouchSpeed = playerMovement.crouchSpeed;
+        baseJumpHeight  = playerMovement.jumpHeight;
+        baseCrouchHeight = playerMovement.crouchHeight;
+
+        ApplyAbilityLocks();
+        StartCoroutine(PlayIntro());
+    }
+
+    void ApplyAbilityLocks()
+    {
+        if (playerMovement)
+        {
+            playerMovement.enabled = true;
+
+            // MOVE
+            if (allowMove)
+            {
+                playerMovement.walkSpeed   = baseWalkSpeed;
+                playerMovement.sprintSpeed = baseSprintSpeed;
+                playerMovement.crouchSpeed = baseCrouchSpeed;
+            }
+            else
+            {
+                playerMovement.walkSpeed   = 0f;
+                playerMovement.sprintSpeed = 0f;
+                playerMovement.crouchSpeed = 0f;
+            }
+
+            // JUMP
+            playerMovement.jumpHeight = allowJump ? baseJumpHeight : 0f;
+
+            // CROUCH
+            playerMovement.crouchHeight =
+                allowCrouch ? baseCrouchHeight : playerMovement.standingHeight;
+        }
+
+        if (mouseLook)
+            mouseLook.enabled = allowLook;
+    }
+
+    IEnumerator PlayIntro()
+    {
+        foreach (var step in introSteps)
+            yield return PlayStepRoutine(step, false);
+
+        stepIndex = 0;
+        StartCoroutine(PlayTutorialStep());
+    }
+
+    IEnumerator PlayTutorialStep()
+    {
+        if (stepIndex >= tutorialSteps.Length)
+        {
+            yield return PlayFinalCompletion();
+            yield break;
+        }
+
+        yield return PlayStepRoutine(tutorialSteps[stepIndex], true);
+    }
+
+    IEnumerator PlayStepRoutine(TutorialStep step, bool waitForCondition)
+    {
+        canCheckCondition = false;
+
+        typingUI.PlayText(step.text, step.typingSpeed);
+
+        if (step.audio)
+            audioSource.PlayOneShot(step.audio);
+
+        while (typingUI.IsTyping)
+            yield return null;
+
+        yield return new WaitForSeconds(step.delayAfterText);
+
+        if (!waitForCondition || step.condition == TutorialCondition.None)
+            yield break;
+
+        // 🔓 TEMPORARILY UNLOCK REQUIRED ABILITY
+        switch (step.condition)
+        {
+            case TutorialCondition.LookAround:
+                allowLook = true;
+                break;
+
+            case TutorialCondition.Move:
+                allowMove = true;
+                break;
+
+            case TutorialCondition.Jump:
+                allowJump = true;
+                break;
+
+            case TutorialCondition.Crouch:
+                allowCrouch = true;
+                break;
+        }
+
+        ApplyAbilityLocks();
+
+        // Same input works AND completes
+        canCheckCondition = true;
+        while (!CheckCondition(step.condition))
+            yield return null;
+        canCheckCondition = false;
+
+        // Ability stays unlocked permanently
+
+        if (!string.IsNullOrEmpty(step.completionText))
+        {
+            typingUI.PlayText(step.completionText, step.completionTypingSpeed);
+
+            while (typingUI.IsTyping)
+                yield return null;
+
+            yield return new WaitForSeconds(step.completionDelay);
+        }
+
+        stepIndex++;
+        StartCoroutine(PlayTutorialStep());
+    }
+
+    IEnumerator PlayFinalCompletion()
+    {
+        typingUI.PlayText(finalCompletionMessage, finalCompletionTypingSpeed);
+
+        while (typingUI.IsTyping)
+            yield return null;
+
+        yield return new WaitForSeconds(finalCompletionDelay);
+
+        // 🔓 Unlock everything
+        allowMove = allowJump = allowCrouch = allowLook = true;
+        ApplyAbilityLocks();
+
+        // Clear UI
+        typingUI.textUI.text = "";
+    }
+
+    bool CheckCondition(TutorialCondition condition)
+    {
+        if (!canCheckCondition)
+            return false;
+
+        switch (condition)
+        {
+            case TutorialCondition.LookAround:
+                return Mathf.Abs(Input.GetAxis("Mouse X")) > 0.2f ||
+                       Mathf.Abs(Input.GetAxis("Mouse Y")) > 0.2f;
+
+            case TutorialCondition.Move:
+                return Input.GetAxisRaw("Horizontal") != 0 ||
+                       Input.GetAxisRaw("Vertical") != 0;
+
+            case TutorialCondition.Jump:
+                return Input.GetKeyDown(KeyCode.Space);
+
+            case TutorialCondition.Crouch:
+                return Input.GetKey(KeyCode.LeftControl);
+        }
+
+        return false;
+    }
+}
