@@ -14,6 +14,7 @@ public class TutorialManager : MonoBehaviour
     public string finalCompletionMessage = "Tutorial complete!";
     public float finalCompletionTypingSpeed = 0.03f;
     public float finalCompletionDelay = 1f;
+    public AudioClip finalCompletionAudio; // 🔊 optional
 
     [Header("References")]
     public TypingTextUI typingUI;
@@ -40,10 +41,10 @@ public class TutorialManager : MonoBehaviour
     void Start()
     {
         // Cache original values ONCE
-        baseWalkSpeed   = playerMovement.walkSpeed;
-        baseSprintSpeed = playerMovement.sprintSpeed;
-        baseCrouchSpeed = playerMovement.crouchSpeed;
-        baseJumpHeight  = playerMovement.jumpHeight;
+        baseWalkSpeed    = playerMovement.walkSpeed;
+        baseSprintSpeed  = playerMovement.sprintSpeed;
+        baseCrouchSpeed  = playerMovement.crouchSpeed;
+        baseJumpHeight   = playerMovement.jumpHeight;
         baseCrouchHeight = playerMovement.crouchHeight;
 
         ApplyAbilityLocks();
@@ -106,8 +107,8 @@ public class TutorialManager : MonoBehaviour
     {
         canCheckCondition = false;
 
+        // ▶ Main text + audio
         typingUI.PlayText(step.text, step.typingSpeed);
-
         if (step.audio)
             audioSource.PlayOneShot(step.audio);
 
@@ -119,24 +120,13 @@ public class TutorialManager : MonoBehaviour
         if (!waitForCondition || step.condition == TutorialCondition.None)
             yield break;
 
-        // 🔓 TEMPORARILY UNLOCK REQUIRED ABILITY
+        // 🔓 Temporarily unlock required ability
         switch (step.condition)
         {
-            case TutorialCondition.LookAround:
-                allowLook = true;
-                break;
-
-            case TutorialCondition.Move:
-                allowMove = true;
-                break;
-
-            case TutorialCondition.Jump:
-                allowJump = true;
-                break;
-
-            case TutorialCondition.Crouch:
-                allowCrouch = true;
-                break;
+            case TutorialCondition.LookAround: allowLook = true; break;
+            case TutorialCondition.Move:       allowMove = true; break;
+            case TutorialCondition.Jump:       allowJump = true; break;
+            case TutorialCondition.Crouch:     allowCrouch = true; break;
         }
 
         ApplyAbilityLocks();
@@ -147,11 +137,13 @@ public class TutorialManager : MonoBehaviour
             yield return null;
         canCheckCondition = false;
 
-        // Ability stays unlocked permanently
-
+        // ▶ Completion message + audio
         if (!string.IsNullOrEmpty(step.completionText))
         {
             typingUI.PlayText(step.completionText, step.completionTypingSpeed);
+
+            if (step.completionAudio) // 🔊 NEW
+                audioSource.PlayOneShot(step.completionAudio);
 
             while (typingUI.IsTyping)
                 yield return null;
@@ -166,6 +158,9 @@ public class TutorialManager : MonoBehaviour
     IEnumerator PlayFinalCompletion()
     {
         typingUI.PlayText(finalCompletionMessage, finalCompletionTypingSpeed);
+
+        if (finalCompletionAudio)
+            audioSource.PlayOneShot(finalCompletionAudio);
 
         while (typingUI.IsTyping)
             yield return null;

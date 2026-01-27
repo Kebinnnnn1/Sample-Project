@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using TMPro;
 
 public class TutorialManager : MonoBehaviour
 {
@@ -14,7 +15,17 @@ public class TutorialManager : MonoBehaviour
     public string finalCompletionMessage = "Tutorial complete!";
     public float finalCompletionTypingSpeed = 0.03f;
     public float finalCompletionDelay = 1f;
-    public AudioClip finalCompletionAudio; // 🔊 optional
+    public AudioClip finalCompletionAudio;
+
+    [Header("Skip Tutorial")]
+    public bool allowSkip = true;
+    public KeyCode skipKey = KeyCode.LeftShift;
+    public float holdToSkipTime = 1.5f;
+
+    [TextArea(1, 2)]
+    public string skipIndicatorText = "Skipping tutorial...";
+    public float skipIndicatorTypingSpeed = 0.05f;
+    public TextMeshProUGUI skipIndicatorTextUI;
 
     [Header("References")]
     public TypingTextUI typingUI;
@@ -24,14 +35,19 @@ public class TutorialManager : MonoBehaviour
 
     int stepIndex;
     bool canCheckCondition;
+    bool tutorialSkipped;
 
-    // 🔒 Ability locks
+    bool isSkipping;
+    float skipTimer;
+    Coroutine skipTypingRoutine;
+
+    // Ability locks
     bool allowMove;
     bool allowJump;
     bool allowCrouch;
     bool allowLook;
 
-    // ✅ Cached original values
+    // Cached values
     float baseWalkSpeed;
     float baseSprintSpeed;
     float baseCrouchSpeed;
@@ -40,46 +56,126 @@ public class TutorialManager : MonoBehaviour
 
     void Start()
     {
-        // Cache original values ONCE
+        if (playerMovement == null || typingUI == null)
+        {
+            Debug.LogError("TutorialManager: Missing required references.");
+            enabled = false;
+            return;
+        }
+
         baseWalkSpeed    = playerMovement.walkSpeed;
         baseSprintSpeed  = playerMovement.sprintSpeed;
         baseCrouchSpeed  = playerMovement.crouchSpeed;
         baseJumpHeight   = playerMovement.jumpHeight;
         baseCrouchHeight = playerMovement.crouchHeight;
 
+        if (skipIndicatorTextUI != null)
+        {
+            skipIndicatorTextUI.text = "";
+            skipIndicatorTextUI.gameObject.SetActive(false);
+        }
+
+        typingUI.ForceEnable(); // 🔴 CRITICAL FIX
         ApplyAbilityLocks();
         StartCoroutine(PlayIntro());
     }
 
+    void Update()
+    {
+        if (!allowSkip || tutorialSkipped) return;
+
+        if (Input.GetKey(skipKey))
+        {
+            skipTimer += Time.deltaTime;
+
+            if (!isSkipping)
+                BeginSkip();
+
+            if (skipTimer >= holdToSkipTime)
+                ConfirmSkip();
+        }
+        else if (isSkipping)
+        {
+            CancelSkip();
+        }
+    }
+
+    // ================= SKIP =================
+
+    void BeginSkip()
+    {
+        isSkipping = true;
+        typingUI.Pause();
+        audioSource?.Pause();
+
+        if (skipIndicatorTextUI == null) return;
+
+        skipIndicatorTextUI.gameObject.SetActive(true);
+        skipIndicatorTextUI.text = "";
+
+        if (skipTypingRoutine != null)
+            StopCoroutine(skipTypingRoutine);
+
+        skipTypingRoutine = StartCoroutine(TypeSkipIndicator());
+    }
+
+    void CancelSkip()
+    {
+        isSkipping = false;
+        skipTimer = 0f;
+
+        typingUI.Resume();
+        audioSource?.UnPause();
+
+        if (skipTypingRoutine != null)
+            StopCoroutine(skipTypingRoutine);
+
+        if (skipIndicatorTextUI != null)
+        {
+            skipIndicatorTextUI.text = "";
+            skipIndicatorTextUI.gameObject.SetActive(false);
+        }
+    }
+
+    void ConfirmSkip()
+    {
+        tutorialSkipped = true;
+
+        StopAllCoroutines();
+        typingUI.Clear();
+        audioSource?.Stop();
+
+        if (skipIndicatorTextUI != null)
+            skipIndicatorTextUI.gameObject.SetActive(false);
+
+        allowMove = allowJump = allowCrouch = allowLook = true;
+        ApplyAbilityLocks();
+    }
+
+    IEnumerator TypeSkipIndicator()
+    {
+        for (int i = 0; i < skipIndicatorText.Length; i++)
+        {
+            skipIndicatorTextUI.text += skipIndicatorText[i];
+            yield return new WaitForSeconds(skipIndicatorTypingSpeed);
+        }
+    }
+
+    // ================= CORE =================
+
     void ApplyAbilityLocks()
     {
-        if (playerMovement)
-        {
-            playerMovement.enabled = true;
+        if (playerMovement == null) return;
 
-            // MOVE
-            if (allowMove)
-            {
-                playerMovement.walkSpeed   = baseWalkSpeed;
-                playerMovement.sprintSpeed = baseSprintSpeed;
-                playerMovement.crouchSpeed = baseCrouchSpeed;
-            }
-            else
-            {
-                playerMovement.walkSpeed   = 0f;
-                playerMovement.sprintSpeed = 0f;
-                playerMovement.crouchSpeed = 0f;
-            }
+        playerMovement.walkSpeed   = allowMove ? baseWalkSpeed : 0f;
+        playerMovement.sprintSpeed = allowMove ? baseSprintSpeed : 0f;
+        playerMovement.crouchSpeed = allowMove ? baseCrouchSpeed : 0f;
 
-            // JUMP
-            playerMovement.jumpHeight = allowJump ? baseJumpHeight : 0f;
+        playerMovement.jumpHeight  = allowJump ? baseJumpHeight : 0f;
+        playerMovement.crouchHeight =
+            allowCrouch ? baseCrouchHeight : playerMovement.standingHeight;
 
-            // CROUCH
-            playerMovement.crouchHeight =
-                allowCrouch ? baseCrouchHeight : playerMovement.standingHeight;
-        }
-
-        if (mouseLook)
+        if (mouseLook != null)
             mouseLook.enabled = allowLook;
     }
 
@@ -105,45 +201,41 @@ public class TutorialManager : MonoBehaviour
 
     IEnumerator PlayStepRoutine(TutorialStep step, bool waitForCondition)
     {
+        if (tutorialSkipped) yield break;
+
         canCheckCondition = false;
+        typingUI.ForceEnable(); // 🔴 FIX
 
-        // ▶ Main text + audio
         typingUI.PlayText(step.text, step.typingSpeed);
-        if (step.audio)
-            audioSource.PlayOneShot(step.audio);
+        if (step.audio) audioSource?.PlayOneShot(step.audio);
 
-        while (typingUI.IsTyping)
+        while (typingUI.IsTyping && !tutorialSkipped)
             yield return null;
 
         yield return new WaitForSeconds(step.delayAfterText);
 
-        if (!waitForCondition || step.condition == TutorialCondition.None)
-            yield break;
+        if (!waitForCondition) yield break;
 
-        // 🔓 Temporarily unlock required ability
         switch (step.condition)
         {
             case TutorialCondition.LookAround: allowLook = true; break;
-            case TutorialCondition.Move:       allowMove = true; break;
-            case TutorialCondition.Jump:       allowJump = true; break;
-            case TutorialCondition.Crouch:     allowCrouch = true; break;
+            case TutorialCondition.Move: allowMove = true; break;
+            case TutorialCondition.Jump: allowJump = true; break;
+            case TutorialCondition.Crouch: allowCrouch = true; break;
         }
 
         ApplyAbilityLocks();
-
-        // Same input works AND completes
         canCheckCondition = true;
-        while (!CheckCondition(step.condition))
+
+        while (!CheckCondition(step.condition) && !tutorialSkipped)
             yield return null;
+
         canCheckCondition = false;
 
-        // ▶ Completion message + audio
         if (!string.IsNullOrEmpty(step.completionText))
         {
             typingUI.PlayText(step.completionText, step.completionTypingSpeed);
-
-            if (step.completionAudio) // 🔊 NEW
-                audioSource.PlayOneShot(step.completionAudio);
+            if (step.completionAudio) audioSource?.PlayOneShot(step.completionAudio);
 
             while (typingUI.IsTyping)
                 yield return null;
@@ -158,45 +250,36 @@ public class TutorialManager : MonoBehaviour
     IEnumerator PlayFinalCompletion()
     {
         typingUI.PlayText(finalCompletionMessage, finalCompletionTypingSpeed);
-
-        if (finalCompletionAudio)
-            audioSource.PlayOneShot(finalCompletionAudio);
+        if (finalCompletionAudio) audioSource?.PlayOneShot(finalCompletionAudio);
 
         while (typingUI.IsTyping)
             yield return null;
 
         yield return new WaitForSeconds(finalCompletionDelay);
-
-        // 🔓 Unlock everything
-        allowMove = allowJump = allowCrouch = allowLook = true;
-        ApplyAbilityLocks();
-
-        // Clear UI
-        typingUI.textUI.text = "";
+        typingUI.Clear();
     }
 
     bool CheckCondition(TutorialCondition condition)
     {
-        if (!canCheckCondition)
-            return false;
+        if (!canCheckCondition) return false;
 
-        switch (condition)
+        return condition switch
         {
-            case TutorialCondition.LookAround:
-                return Mathf.Abs(Input.GetAxis("Mouse X")) > 0.2f ||
-                       Mathf.Abs(Input.GetAxis("Mouse Y")) > 0.2f;
+            TutorialCondition.LookAround =>
+                Mathf.Abs(Input.GetAxis("Mouse X")) > 0.2f ||
+                Mathf.Abs(Input.GetAxis("Mouse Y")) > 0.2f,
 
-            case TutorialCondition.Move:
-                return Input.GetAxisRaw("Horizontal") != 0 ||
-                       Input.GetAxisRaw("Vertical") != 0;
+            TutorialCondition.Move =>
+                Input.GetAxisRaw("Horizontal") != 0 ||
+                Input.GetAxisRaw("Vertical") != 0,
 
-            case TutorialCondition.Jump:
-                return Input.GetKeyDown(KeyCode.Space);
+            TutorialCondition.Jump =>
+                Input.GetKeyDown(KeyCode.Space),
 
-            case TutorialCondition.Crouch:
-                return Input.GetKey(KeyCode.LeftControl);
-        }
+            TutorialCondition.Crouch =>
+                Input.GetKey(KeyCode.LeftControl),
 
-        return false;
+            _ => false
+        };
     }
 }

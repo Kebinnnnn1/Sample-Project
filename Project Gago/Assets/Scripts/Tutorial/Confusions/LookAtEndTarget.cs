@@ -1,87 +1,71 @@
 using UnityEngine;
-using TMPro;
-using System.Collections;
+using UnityEngine.UI;
 
-public class LookAtEndTarget : MonoBehaviour
+public class LookAtEndWithProgress : MonoBehaviour
 {
-    [Header("Target")]
-    public Transform target;
+    [Header("Target (3D World Object)")]
+    public Transform endTarget;
     public float maxDistance = 30f;
     public float lookTimeRequired = 1.5f;
 
     [Header("UI")]
-    public TextMeshProUGUI typingText;
-    public GameObject lookIndicator;
+    public Image lookProgress;
 
-    [TextArea(2, 4)]
-    public string completionMessage = "That’s the end.";
-
-    public float typingSpeed = 0.04f;
-
-    [Header("Audio")]
+    [Header("Audio (Optional)")]
     public AudioSource audioSource;
-    public AudioClip completionVoice;
+    public AudioClip completionSound;
 
     private float lookTimer;
     private bool completed;
 
     void Start()
     {
-        if (lookIndicator)
-            lookIndicator.SetActive(false);
+        // Make sure cursor is visible
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        if (lookProgress != null)
+            lookProgress.fillAmount = 0f;
     }
 
     void Update()
     {
+        // Safety checks
         if (completed) return;
+        if (endTarget == null || lookProgress == null) return;
 
         Ray ray = new Ray(transform.position, transform.forward);
         RaycastHit hit;
 
-        bool isLookingAtTarget = false;
+        bool lookingAtEnd = false;
 
         if (Physics.Raycast(ray, out hit, maxDistance))
         {
-            if (hit.transform == target)
+            if (hit.transform == endTarget)
             {
-                isLookingAtTarget = true;
+                lookingAtEnd = true;
                 lookTimer += Time.deltaTime;
-
-                if (lookTimer >= lookTimeRequired)
-                {
-                    Complete();
-                }
             }
         }
 
-        if (!isLookingAtTarget)
+        if (!lookingAtEnd)
             lookTimer = 0f;
 
-        if (lookIndicator)
-            lookIndicator.SetActive(isLookingAtTarget);
+        lookProgress.fillAmount = lookTimer / lookTimeRequired;
+
+        if (lookTimer >= lookTimeRequired)
+            Complete();
     }
 
     void Complete()
     {
         completed = true;
 
-        if (lookIndicator)
-            lookIndicator.SetActive(false);
+        lookProgress.fillAmount = 1f;
 
-        if (audioSource && completionVoice)
-            audioSource.PlayOneShot(completionVoice);
+        if (audioSource != null && completionSound != null)
+            audioSource.PlayOneShot(completionSound);
 
-        StartCoroutine(TypeCompletion());
-    }
-
-    IEnumerator TypeCompletion()
-    {
-        typingText.text = "";
-
-        foreach (char c in completionMessage)
-        {
-            typingText.text += c;
-            yield return new WaitForSeconds(typingSpeed);
-        }
+        Debug.Log("END confirmed");
     }
 }
