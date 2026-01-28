@@ -13,25 +13,33 @@ public class MouseLook : MonoBehaviour
     float mouseSensitivity;
     float xRotation;
 
-    float currentX;
-    float currentY;
     float smoothX;
     float smoothY;
 
     Transform playerBody;
 
-    void Start()
+    void Awake()
     {
         playerBody = transform.parent;
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-
         UpdateSensitivity();
+    }
+
+    void OnEnable()
+    {
+        LockCursor();
+    }
+
+    void OnDisable()
+    {
+        UnlockCursor();
     }
 
     void Update()
     {
+        // Safety: re-lock if Unity unlocks it
+        if (Cursor.lockState != CursorLockMode.Locked)
+            LockCursor();
+
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
@@ -54,5 +62,17 @@ public class MouseLook : MonoBehaviour
     {
         float t = sensitivity / 100f;
         mouseSensitivity = Mathf.Lerp(80f, 600f, t * t);
+    }
+
+    void LockCursor()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    void UnlockCursor()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 }

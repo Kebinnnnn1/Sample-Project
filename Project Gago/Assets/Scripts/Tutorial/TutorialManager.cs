@@ -23,8 +23,7 @@ public class TutorialManager : MonoBehaviour
     public float holdToSkipTime = 1.5f;
 
     [TextArea(1, 2)]
-    public string skipIndicatorText = "Skipping tutorial...";
-    public float skipIndicatorTypingSpeed = 0.05f;
+    public string skipIndicatorText = "Skipping tutorial";
     public TextMeshProUGUI skipIndicatorTextUI;
 
     [Header("References")]
@@ -39,7 +38,6 @@ public class TutorialManager : MonoBehaviour
 
     bool isSkipping;
     float skipTimer;
-    Coroutine skipTypingRoutine;
 
     // Ability locks
     bool allowMove;
@@ -75,14 +73,15 @@ public class TutorialManager : MonoBehaviour
             skipIndicatorTextUI.gameObject.SetActive(false);
         }
 
-        typingUI.ForceEnable(); // 🔴 CRITICAL FIX
+        typingUI.ForceEnable();
         ApplyAbilityLocks();
         StartCoroutine(PlayIntro());
     }
 
     void Update()
     {
-        if (!allowSkip || tutorialSkipped) return;
+        if (!allowSkip || tutorialSkipped)
+            return;
 
         if (Input.GetKey(skipKey))
         {
@@ -90,6 +89,8 @@ public class TutorialManager : MonoBehaviour
 
             if (!isSkipping)
                 BeginSkip();
+
+            UpdateSkipIndicator();
 
             if (skipTimer >= holdToSkipTime)
                 ConfirmSkip();
@@ -105,18 +106,26 @@ public class TutorialManager : MonoBehaviour
     void BeginSkip()
     {
         isSkipping = true;
+        skipTimer = 0f;
+
         typingUI.Pause();
         audioSource?.Pause();
 
-        if (skipIndicatorTextUI == null) return;
+        if (skipIndicatorTextUI != null)
+        {
+            skipIndicatorTextUI.gameObject.SetActive(true);
+            UpdateSkipIndicator();
+        }
+    }
 
-        skipIndicatorTextUI.gameObject.SetActive(true);
-        skipIndicatorTextUI.text = "";
+    void UpdateSkipIndicator()
+    {
+        if (skipIndicatorTextUI == null)
+            return;
 
-        if (skipTypingRoutine != null)
-            StopCoroutine(skipTypingRoutine);
-
-        skipTypingRoutine = StartCoroutine(TypeSkipIndicator());
+        float remaining = Mathf.Max(0f, holdToSkipTime - skipTimer);
+        skipIndicatorTextUI.text =
+            $"{skipIndicatorText} ({remaining:F1}s)";
     }
 
     void CancelSkip()
@@ -126,9 +135,6 @@ public class TutorialManager : MonoBehaviour
 
         typingUI.Resume();
         audioSource?.UnPause();
-
-        if (skipTypingRoutine != null)
-            StopCoroutine(skipTypingRoutine);
 
         if (skipIndicatorTextUI != null)
         {
@@ -146,26 +152,21 @@ public class TutorialManager : MonoBehaviour
         audioSource?.Stop();
 
         if (skipIndicatorTextUI != null)
+        {
+            skipIndicatorTextUI.text = "";
             skipIndicatorTextUI.gameObject.SetActive(false);
+        }
 
         allowMove = allowJump = allowCrouch = allowLook = true;
         ApplyAbilityLocks();
-    }
-
-    IEnumerator TypeSkipIndicator()
-    {
-        for (int i = 0; i < skipIndicatorText.Length; i++)
-        {
-            skipIndicatorTextUI.text += skipIndicatorText[i];
-            yield return new WaitForSeconds(skipIndicatorTypingSpeed);
-        }
     }
 
     // ================= CORE =================
 
     void ApplyAbilityLocks()
     {
-        if (playerMovement == null) return;
+        if (playerMovement == null)
+            return;
 
         playerMovement.walkSpeed   = allowMove ? baseWalkSpeed : 0f;
         playerMovement.sprintSpeed = allowMove ? baseSprintSpeed : 0f;
@@ -201,10 +202,11 @@ public class TutorialManager : MonoBehaviour
 
     IEnumerator PlayStepRoutine(TutorialStep step, bool waitForCondition)
     {
-        if (tutorialSkipped) yield break;
+        if (tutorialSkipped)
+            yield break;
 
         canCheckCondition = false;
-        typingUI.ForceEnable(); // 🔴 FIX
+        typingUI.ForceEnable();
 
         typingUI.PlayText(step.text, step.typingSpeed);
         if (step.audio) audioSource?.PlayOneShot(step.audio);
@@ -214,14 +216,15 @@ public class TutorialManager : MonoBehaviour
 
         yield return new WaitForSeconds(step.delayAfterText);
 
-        if (!waitForCondition) yield break;
+        if (!waitForCondition)
+            yield break;
 
         switch (step.condition)
         {
             case TutorialCondition.LookAround: allowLook = true; break;
-            case TutorialCondition.Move: allowMove = true; break;
-            case TutorialCondition.Jump: allowJump = true; break;
-            case TutorialCondition.Crouch: allowCrouch = true; break;
+            case TutorialCondition.Move:       allowMove = true; break;
+            case TutorialCondition.Jump:       allowJump = true; break;
+            case TutorialCondition.Crouch:     allowCrouch = true; break;
         }
 
         ApplyAbilityLocks();
@@ -261,7 +264,8 @@ public class TutorialManager : MonoBehaviour
 
     bool CheckCondition(TutorialCondition condition)
     {
-        if (!canCheckCondition) return false;
+        if (!canCheckCondition)
+            return false;
 
         return condition switch
         {
