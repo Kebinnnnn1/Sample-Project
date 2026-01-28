@@ -12446,7 +12446,7 @@ MonoBehaviour:
   finalCompletionMessage: Anyway, lets get you started go to the END of the map.
   finalCompletionTypingSpeed: 0.05
   finalCompletionDelay: 1.5
-  finalCompletionAudio: {fileID: 0}
+  finalCompletionAudio: {fileID: 8300000, guid: 78e14f0ab2aa8b44a84a3734b7973494, type: 3}
   allowSkip: 1
   skipKey: 293
   holdToSkipTime: 2
