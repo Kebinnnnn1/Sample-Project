@@ -2,6 +2,13 @@ using UnityEngine;
 
 public class Relicc : MonoBehaviour
 {
+    UIManager ui;
+
+    void Start()
+    {
+        ui = FindObjectOfType<UIManager>();
+    }
+
     void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player")) return;
@@ -10,6 +17,11 @@ public class Relicc : MonoBehaviour
         if (flood != null)
         {
             flood.StartFloodWithDelay();
+        }
+
+        if (ui != null)
+        {
+            ui.ShowLavaWarning(); // <-- THIS is what should show here
         }
 
         Destroy(gameObject);

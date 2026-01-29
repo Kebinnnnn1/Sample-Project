@@ -6,6 +6,12 @@ public class RelicButton : MonoBehaviour
     public GameObject relicToSpawn;
 
     bool activated;
+    UIManager ui;
+
+    void Start()
+    {
+        ui = FindObjectOfType<UIManager>();
+    }
 
     void OnTriggerEnter(Collider other)
     {
@@ -14,13 +20,19 @@ public class RelicButton : MonoBehaviour
 
         activated = true;
 
+        // Spawn / reveal the relic
         if (relicToSpawn != null)
         {
             relicToSpawn.SetActive(true);
         }
 
-        // Optional: button feedback
-        Destroy(gameObject);
-        // play sound / animation here
+        // Show UI feedback
+        if (ui != null)
+        {
+            ui.ShowRelicUnlocked();
+        }
+
+        // Optional: disable button so it can't be reused
+        gameObject.SetActive(false);
     }
 }
