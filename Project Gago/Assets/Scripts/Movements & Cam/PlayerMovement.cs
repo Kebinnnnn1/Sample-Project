@@ -20,17 +20,22 @@ public class PlayerMovement : MonoBehaviour
     public float standingHeight = 2f;
     public float crouchSmooth = 8f;
 
+    [Header("Ground Check")]
+    public float groundCheckDistance = 0.2f;
+
     [Header("Physics Interaction")]
     public float pushForce = 5f;
+
+    [Header("Jump Reliability")]
+public float coyoteTime = 0.15f;
+float coyoteTimer;
 
     CharacterController controller;
     Vector3 velocity;
     Vector3 moveVelocity;
 
+    bool isGrounded;
     bool isCrouching;
-
-    // 🔑 jump lock
-    bool canJump = true;
 
     MovingPlatform currentPlatform;
 
@@ -41,6 +46,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        GroundCheck();
         Crouch();
         Move();
         GravityAndJump();
@@ -58,10 +64,8 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 input = (transform.right * x + transform.forward * z).normalized;
 
-        bool sprinting =
-            Input.GetKey(KeyCode.LeftShift) &&
-            !isCrouching &&
-            input.magnitude > 0.1f;
+        bool sprintInput = Input.GetKey(KeyCode.LeftShift);
+        bool sprinting = sprintInput && !isCrouching && input.magnitude > 0.1f;
 
         float speed = walkSpeed;
         if (isCrouching) speed = crouchSpeed;
@@ -78,29 +82,53 @@ public class PlayerMovement : MonoBehaviour
     }
 
     // =============================
-    // GRAVITY & JUMP (CORRECT)
+    // GRAVITY & JUMP
     // =============================
     void GravityAndJump()
     {
-        // jump (single only)
-        if (Input.GetKeyDown(KeyCode.Space) && canJump && !isCrouching)
-        {
+        if (isGrounded && velocity.y < 0)
+            velocity.y = -2f;
+
+        if (Input.GetKeyDown(KeyCode.Space) && coyoteTimer > 0f && !isCrouching)
+
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-            canJump = false;
-        }
+            coyoteTimer = 0f;
 
         velocity.y += gravity * Time.deltaTime;
-
-        // move + get collision result
-        CollisionFlags flags = controller.Move(velocity * Time.deltaTime);
-
-        // landed ONLY if we hit something below
-        if ((flags & CollisionFlags.Below) != 0)
-        {
-            velocity.y = -2f;
-            canJump = true;
-        }
+        controller.Move(velocity * Time.deltaTime);
     }
+
+    // =============================
+    // GROUND CHECK
+    // =============================
+   void GroundCheck()
+{
+    bool groundedByController = controller.isGrounded;
+
+    bool groundedBySphere = Physics.SphereCast(
+        transform.position + Vector3.up * 0.1f,
+        controller.radius * 0.9f,
+        Vector3.down,
+        out RaycastHit hit,
+        controller.height / 2 + groundCheckDistance
+    );
+
+    isGrounded = groundedByController || groundedBySphere;
+
+    if (isGrounded)
+    {
+        coyoteTimer = coyoteTime;
+        currentPlatform = hit.collider != null
+            ? hit.collider.GetComponentInParent<MovingPlatform>()
+            : null;
+    }
+    else
+    {
+        coyoteTimer -= Time.deltaTime;
+        if (coyoteTimer <= 0f)
+            currentPlatform = null;
+    }
+}
 
     // =============================
     // CROUCH
@@ -118,11 +146,11 @@ public class PlayerMovement : MonoBehaviour
     }
 
     // =============================
-    // AUTO JUMP (SAFE)
+    // AUTO JUMP
     // =============================
     void AutoJump()
     {
-        if (!canJump || isCrouching || moveVelocity.magnitude < 0.1f)
+        if (!isGrounded || moveVelocity.magnitude < 0.1f || isCrouching)
             return;
 
         RaycastHit hit;
@@ -132,10 +160,7 @@ public class PlayerMovement : MonoBehaviour
         {
             float obstacleHeight = hit.collider.bounds.max.y - transform.position.y;
             if (obstacleHeight > 0.3f && obstacleHeight < 1.2f)
-            {
                 velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-                canJump = false;
-            }
         }
     }
 
@@ -149,22 +174,23 @@ public class PlayerMovement : MonoBehaviour
         if (hit.moveDirection.y < -0.3f) return;
         if (moveVelocity.magnitude < 0.1f) return;
 
-        Vector3 pushDir =
-            new Vector3(hit.moveDirection.x, 0f, hit.moveDirection.z).normalized;
+        Vector3 pushDir = new Vector3(hit.moveDirection.x, 0f, hit.moveDirection.z).normalized;
+        float speedFactor = Mathf.Clamp01(moveVelocity.magnitude / sprintSpeed);
 
-        rb.AddForce(pushDir * pushForce, ForceMode.Force);
+        rb.AddForce(pushDir * pushForce * speedFactor, ForceMode.Force);
     }
+
 
     void ApplyPlatformMovement()
-    {
-        if (currentPlatform == null) return;
-        controller.Move(currentPlatform.DeltaMovement);
-    }
+{
+    if (currentPlatform == null) return;
 
+    controller.Move(currentPlatform.DeltaMovement);
+}
     // =============================
     // PUBLIC STATES
     // =============================
-    public bool IsGrounded => canJump; // logical grounded
+    public bool IsGrounded => isGrounded;
     public bool IsMoving => moveVelocity.magnitude > 0.1f;
     public bool IsCrouching => isCrouching;
     public bool IsSprinting =>
