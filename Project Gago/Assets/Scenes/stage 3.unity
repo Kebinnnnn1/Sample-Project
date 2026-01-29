@@ -1409,13 +1409,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 461008102}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8610934662797de4f99a8d0ef870288f, type: 3}
+  m_Script: {fileID: 11500000, guid: c920130244ed1e74c97445c60dbfc536, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   platform: {fileID: 1412508522}
   moveDirection: {x: 0, y: 0, z: 1}
   moveDistance: 2.49
-  moveSpeed: 5
+  moveSpeed: 6
 --- !u!4 &461008105
 Transform:
   m_ObjectHideFlags: 0
@@ -3387,13 +3387,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1110829296}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8610934662797de4f99a8d0ef870288f, type: 3}
+  m_Script: {fileID: 11500000, guid: c920130244ed1e74c97445c60dbfc536, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   platform: {fileID: 215324472}
   moveDirection: {x: 0, y: 0, z: -1}
   moveDistance: 2.49
-  moveSpeed: 5
+  moveSpeed: 6
 --- !u!4 &1110829299
 Transform:
   m_ObjectHideFlags: 0
@@ -6360,7 +6360,9 @@ MonoBehaviour:
   crouchHeight: 1
   standingHeight: 2
   crouchSmooth: 8
+  groundCheckDistance: 0.2
   pushForce: 3
+  coyoteTime: 0.15
 --- !u!143 &2121112662
 CharacterController:
   m_ObjectHideFlags: 0
