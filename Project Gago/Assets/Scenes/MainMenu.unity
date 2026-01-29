@@ -334,19 +334,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 550192015}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 329edf83d8db2152e9734abeb5a9d971, type: 3}
+  m_Script: {fileID: 11500000, guid: 174158d41fa39fc09ac924ff3fa327d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gameTitle: Easyiet Game
   gameSceneName: Tutorial
-  gameTitle: PROJECT GAGO
-  primaryColor: {r: 0.06348438, g: 0.065285034, b: 0.06708568, a: 1}
-  secondaryColor: {r: 0.082012236, g: 0.081331186, b: 0.08166949, a: 1}
-  backgroundColor: {r: 0.05, g: 0.05, b: 0.1, a: 1}
-  buttonColor: {r: 0.15, g: 0.15, b: 0.25, a: 1}
-  buttonHoverColor: {r: 0.25, g: 0.25, b: 0.4, a: 1}
+  numberOfStars: 100
+  starTwinkleSpeed: 2
+  menuMusic: {fileID: 8300000, guid: 607c90b5a1c9eb77ab41229b1c7b4bdb, type: 3}
+  clickSound: {fileID: 8300000, guid: 4b7e0c9ae0681273ca1dc8117733f3a8, type: 3}
+  hoverSound: {fileID: 8300000, guid: 4b7e0c9ae0681273ca1dc8117733f3a8, type: 3}
+  backgroundColor: {r: 0, g: 0, b: 0, a: 1}
   textColor: {r: 1, g: 1, b: 1, a: 1}
-  numberOfFloatingCubes: 15
-  cubeSpawnRadius: 20
+  buttonBorderColor: {r: 1, g: 1, b: 1, a: 1}
+  buttonHoverColor: {r: 0.3, g: 0.3, b: 0.3, a: 1}
 --- !u!4 &550192017
 Transform:
   m_ObjectHideFlags: 0

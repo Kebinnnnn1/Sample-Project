@@ -54,11 +54,29 @@ public class TutorialManager : MonoBehaviour
 
     void Start()
     {
-        if (playerMovement == null || typingUI == null)
+        // Skip tutorial in multiplayer mode - it's designed for single player
+        if (MainMenuManager.IsMultiplayer)
         {
-            Debug.LogError("TutorialManager: Missing required references.");
+            Debug.Log("TutorialManager: Skipping tutorial in multiplayer mode.");
             enabled = false;
             return;
+        }
+
+        if (playerMovement == null || typingUI == null)
+        {
+            // Try to find references if not set
+            if (playerMovement == null)
+                playerMovement = FindObjectOfType<PlayerMovement>();
+            if (typingUI == null)
+                typingUI = FindObjectOfType<TypingTextUI>();
+            
+            // If still missing, disable gracefully
+            if (playerMovement == null || typingUI == null)
+            {
+                Debug.LogWarning("TutorialManager: Missing required references. Tutorial disabled.");
+                enabled = false;
+                return;
+            }
         }
 
         baseWalkSpeed    = playerMovement.walkSpeed;

@@ -622,8 +622,18 @@ public class RetroMenuGenerator : MonoBehaviour
     
     private void OnStartClicked()
     {
-        Debug.Log("Starting game: " + gameSceneName);
-        StartCoroutine(LoadGameWithFade());
+        // Show mode selection panel (Single Player / Multiplayer)
+        var multiplayerPanel = FindObjectOfType<MultiplayerPanelGenerator>();
+        if (multiplayerPanel != null)
+        {
+            multiplayerPanel.ShowModeSelection();
+        }
+        else
+        {
+            // Fallback: load game directly if no multiplayer panel
+            Debug.Log("Starting game: " + gameSceneName);
+            StartCoroutine(LoadGameWithFade());
+        }
     }
     
     private System.Collections.IEnumerator LoadGameWithFade()

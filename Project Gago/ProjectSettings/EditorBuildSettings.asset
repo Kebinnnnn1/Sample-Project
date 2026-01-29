@@ -9,7 +9,7 @@ EditorBuildSettings:
     path: Assets/Scenes/Tutorial.unity
     guid: 4ebcb3d39df9c38458db11109acd70e5
   - enabled: 1
-    path: Assets/Scenes/stage 3.unity
+    path: Assets/Scenes/Stage3.unity
     guid: 31da09cbfc6291144b41b89f62c3a72c
   - enabled: 1
     path: Assets/Scenes/POVtest.unity
