@@ -8,33 +8,35 @@ public class RisingFloodd : MonoBehaviour
     public float riseSpeed = 0.5f;
     public float startDelay = 3f;
 
-    bool isActive;
+    [Header("References (Assign in Inspector)")]
+    [SerializeField] UIManager ui;
+    [SerializeField] CameraShake cameraShake;
 
-    UIManager ui;
-    AudioSource alarm;
-    CameraShake cameraShake;
+    [Header("Audio")]
+    [SerializeField] AudioSource audioSource;
+    [SerializeField] AudioClip warningClip;
+
+    bool isActive;
 
     void Start()
     {
-        ui = FindObjectOfType<UIManager>();
-        alarm = GetComponent<AudioSource>();
-        cameraShake = Camera.main.GetComponent<CameraShake>();
+        // Safety checks (no crashes)
+        if (ui == null)
+            Debug.LogError("RisingFloodd: UIManager not assigned");
 
-        
-if (cameraShake == null)
-{
-    Debug.LogError("CameraShake NOT FOUND on Main Camera");
-}
-else
-{
-    Debug.Log("CameraShake FOUND");
-}
+        if (cameraShake == null)
+            Debug.LogError("RisingFloodd: CameraShake not assigned");
+
+        if (audioSource == null)
+            Debug.LogError("RisingFloodd: AudioSource not assigned");
+
+        if (warningClip == null)
+            Debug.LogWarning("RisingFloodd: Warning AudioClip not assigned");
     }
 
     void Update()
     {
         if (!isActive) return;
-
         transform.Translate(Vector3.up * riseSpeed * Time.deltaTime);
     }
 
@@ -53,34 +55,33 @@ else
 
     IEnumerator StartFloodCoroutine()
     {
-        // UI + Alarm
+        // UI
         if (ui != null)
         {
             ui.ShowLavaWarning();
             StartCoroutine(ui.Countdown(5));
         }
 
-        if (alarm != null)
+        // Audio
+        if (audioSource != null && warningClip != null)
         {
-            alarm.Play();
+            audioSource.clip = warningClip;
+            audioSource.loop = true;
+            audioSource.Play();
         }
 
         yield return new WaitForSeconds(startDelay);
 
+        // Stop warning
         if (ui != null)
-        {
             ui.HideLavaWarning();
-        }
 
-        if (alarm != null)
-        {
-            alarm.Stop();
-        }
+        if (audioSource != null)
+            audioSource.Stop();
 
+        // Camera shake
         if (cameraShake != null)
-        {
-            StartCoroutine(cameraShake.Shake(0.5f, 0.2f));
-        }
+            StartCoroutine(cameraShake.Shake(0.5f, 0.6f));
 
         isActive = true;
     }
