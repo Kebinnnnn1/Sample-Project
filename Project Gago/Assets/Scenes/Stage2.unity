@@ -6514,8 +6514,8 @@ MonoBehaviour:
   directionThreshold: 0.3
   minPitch: 0.9
   maxPitch: 1.1
-  minVolume: 10
-  maxVolume: 20
+  minVolume: 20
+  maxVolume: 30
 --- !u!82 &1212210390
 AudioSource:
   m_ObjectHideFlags: 0
@@ -6536,8 +6536,8 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 0
-  MinDistance: 5
-  MaxDistance: 45
+  MinDistance: 10
+  MaxDistance: 50
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
@@ -6914,8 +6914,8 @@ MonoBehaviour:
   directionThreshold: 0.3
   minPitch: 0.9
   maxPitch: 1.1
-  minVolume: 10
-  maxVolume: 20
+  minVolume: 20
+  maxVolume: 30
 --- !u!82 &1344995712
 AudioSource:
   m_ObjectHideFlags: 0
@@ -6936,7 +6936,7 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 0
-  MinDistance: 5
+  MinDistance: 10
   MaxDistance: 45
   Pan2D: 0
   rolloffMode: 0
