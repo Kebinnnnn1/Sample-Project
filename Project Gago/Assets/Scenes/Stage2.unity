@@ -1442,7 +1442,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveDirection: {x: -30, y: 0, z: -30}
   moveDistance: 3
-  speed: 1
+  speed: 1.5
   startDelay: 3
   cycleOffset: 0
 --- !u!54 &427728371
@@ -1797,7 +1797,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveDirection: {x: 1, y: 0, z: 0.5}
   moveDistance: 3
-  speed: 1.5
+  speed: 2
   startDelay: 0.5
   cycleOffset: 0
 --- !u!1 &490866884
@@ -2134,7 +2134,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveDirection: {x: 1, y: 0, z: 0}
   moveDistance: 3
-  speed: 1.5
+  speed: 2
   startDelay: 0
   cycleOffset: 0
 --- !u!54 &536056141
@@ -2285,7 +2285,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveDirection: {x: 1, y: 0, z: 1.5}
   moveDistance: 3
-  speed: 1.5
+  speed: 2
   startDelay: 1
   cycleOffset: 0
 --- !u!54 &564069435
@@ -2675,7 +2675,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveDirection: {x: -50, y: 0, z: 10}
   moveDistance: 3
-  speed: 1
+  speed: 1.5
   startDelay: 2.5
   cycleOffset: 0
 --- !u!54 &596195160
@@ -3245,7 +3245,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   walkSpeed: 3
-  sprintSpeed: 5.5
+  sprintSpeed: 4.5
   crouchSpeed: 2
   acceleration: 7
   jumpHeight: 1.5
@@ -3253,11 +3253,11 @@ MonoBehaviour:
   autoJumpCheckDistance: 0.6
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
   crouchHeight: 1
   standingHeight: 2
   crouchSmooth: 8
-  groundCheckDistance: 0.2
+  groundCheckDistance: -0.5
   pushForce: 5
   coyoteTime: 0.15
 --- !u!1 &793887125
@@ -5442,7 +5442,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveDirection: {x: -50, y: 0, z: -20}
   moveDistance: 3
-  speed: 1
+  speed: 1.5
   startDelay: 3.6
   cycleOffset: 0
 --- !u!54 &802608749
@@ -7800,7 +7800,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveDirection: {x: -30, y: 0, z: -30}
   moveDistance: 3
-  speed: 1
+  speed: 1.5
   startDelay: 4
   cycleOffset: 0
 --- !u!54 &1815831274
@@ -12561,7 +12561,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   portalType: 0
-  sceneToLoad: Stage2
+  sceneToLoad: Stage3
   videoPlayer: {fileID: 0}
   respawnPoint: {fileID: 0}
   holdToSkipTime: 1.5
@@ -12573,7 +12573,7 @@ MonoBehaviour:
   flashbangAudioSource: {fileID: 0}
   flashbangClip: {fileID: 0}
   audioFadeOutTime: 0.8
-  targetCamera: {fileID: 0}
+  targetCamera: {fileID: 248519519}
 --- !u!1 &7676536750181248463
 GameObject:
   m_ObjectHideFlags: 0
@@ -13116,7 +13116,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3377a7b52a77455408ba1786e896770f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  riseSpeed: 0.8
+  riseSpeed: 0.75
   startDelay: 5
   ui: {fileID: 2011271490}
   cameraShake: {fileID: 0}
