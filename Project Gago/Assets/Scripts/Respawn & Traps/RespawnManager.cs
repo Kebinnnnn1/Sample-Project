@@ -10,14 +10,16 @@ public class RespawnManager : MonoBehaviour
     [Header("Spawn")]
     public Transform spawnPoint;
 
-    [Header("Black Screen")]
+    [Header("Black Screen (Optional)")]
+    public bool useBlackFade = true;
     public Image fadeImage;
     public float blackFadeDuration = 1f;
     public AnimationCurve blackFadeCurve = AnimationCurve.Linear(0, 0, 1, 1);
 
-    [Header("Death Text")]
-    public Text deathText;                  // Optional (legacy)
-    public TextMeshProUGUI deathTMP;         // Optional (TMP)
+    [Header("Death Text (Optional)")]
+    public bool useDeathText = true;
+    public Text deathText;                  // Legacy UI Text
+    public TextMeshProUGUI deathTMP;         // TMP
     public float textFadeDuration = 0.6f;
     public AnimationCurve textFadeCurve = AnimationCurve.Linear(0, 0, 1, 1);
 
@@ -25,7 +27,8 @@ public class RespawnManager : MonoBehaviour
     public string[] deathMessages;
     public Color[] deathColors;
 
-    [Header("Death Sound")]
+    [Header("Death Sound (Optional)")]
+    public bool useDeathSound = true;
     public AudioSource deathAudioSource;
     public AudioClip[] deathSounds;
     [Range(0f, 1f)] public float deathVolume = 1f;
@@ -34,14 +37,13 @@ public class RespawnManager : MonoBehaviour
 
     void Awake()
     {
-        if (Instance == null)
-            Instance = this;
-        else
+        if (Instance != null)
         {
             Destroy(gameObject);
             return;
         }
 
+        Instance = this;
         InitUI();
     }
 
@@ -67,28 +69,36 @@ public class RespawnManager : MonoBehaviour
     {
         isRespawning = true;
 
-        // Enable black screen
-        fadeImage.gameObject.SetActive(true);
-        yield return null;
+        // Enable black screen if used
+        if (useBlackFade && fadeImage != null)
+        {
+            fadeImage.gameObject.SetActive(true);
+            yield return null;
+        }
 
-        // 🔊 Play random death sound
-        PlayRandomDeathSound();
+        // Play sound
+        if (useDeathSound)
+            PlayRandomDeathSound();
 
         // Fade to black
-        yield return FadeBlack(0f, 1f);
+        if (useBlackFade && fadeImage != null)
+            yield return FadeBlack(0f, 1f);
 
-        // Show text
-        ShowRandomDeathMessage();
-        yield return FadeText(0f, 1f);
+        // Show death text
+        if (useDeathText)
+        {
+            ShowRandomDeathMessage();
+            yield return FadeText(0f, 1f);
+        }
 
-        // Reset world
+        // Reset world objects
         foreach (MovingPlatformTrigger p in FindObjectsOfType<MovingPlatformTrigger>())
             p.ResetPlatform();
 
         foreach (SpikeTrap trap in FindObjectsOfType<SpikeTrap>())
             trap.ResetTrap();
 
-        // Disable player movement
+        // Disable movement
         CharacterController cc = player.GetComponent<CharacterController>();
         Rigidbody rb = player.GetComponent<Rigidbody>();
 
@@ -107,14 +117,20 @@ public class RespawnManager : MonoBehaviour
         if (cc != null) cc.enabled = true;
         if (rb != null) rb.isKinematic = false;
 
-        // Hide text
-        yield return FadeText(1f, 0f);
-        HideDeathText();
+        // Hide death text
+        if (useDeathText)
+        {
+            yield return FadeText(1f, 0f);
+            HideDeathText();
+        }
 
         // Fade back
-        yield return FadeBlack(1f, 0f);
+        if (useBlackFade && fadeImage != null)
+            yield return FadeBlack(1f, 0f);
 
-        fadeImage.gameObject.SetActive(false);
+        if (fadeImage != null)
+            fadeImage.gameObject.SetActive(false);
+
         isRespawning = false;
     }
 
@@ -132,7 +148,6 @@ public class RespawnManager : MonoBehaviour
             t += Time.deltaTime;
             float n = t / blackFadeDuration;
             float curve = blackFadeCurve.Evaluate(n);
-
             c.a = Mathf.Lerp(from, to, curve);
             fadeImage.color = c;
             yield return null;
@@ -146,10 +161,10 @@ public class RespawnManager : MonoBehaviour
 
     void ShowRandomDeathMessage()
     {
-        if (deathMessages.Length == 0) return;
+        if (deathMessages == null || deathMessages.Length == 0) return;
 
         string msg = deathMessages[Random.Range(0, deathMessages.Length)];
-        Color col = (deathColors.Length > 0)
+        Color col = (deathColors != null && deathColors.Length > 0)
             ? deathColors[Random.Range(0, deathColors.Length)]
             : Color.white;
 
@@ -177,15 +192,12 @@ public class RespawnManager : MonoBehaviour
     IEnumerator FadeText(float from, float to)
     {
         float t = 0f;
-
         while (t < textFadeDuration)
         {
             t += Time.deltaTime;
             float n = t / textFadeDuration;
             float curve = textFadeCurve.Evaluate(n);
-
-            float a = Mathf.Lerp(from, to, curve);
-            SetTextAlpha(a);
+            SetTextAlpha(Mathf.Lerp(from, to, curve));
             yield return null;
         }
 
@@ -213,7 +225,7 @@ public class RespawnManager : MonoBehaviour
 
     void PlayRandomDeathSound()
     {
-        if (deathAudioSource == null || deathSounds.Length == 0)
+        if (deathAudioSource == null || deathSounds == null || deathSounds.Length == 0)
             return;
 
         AudioClip clip = deathSounds[Random.Range(0, deathSounds.Length)];
