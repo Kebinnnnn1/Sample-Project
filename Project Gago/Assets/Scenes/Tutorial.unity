@@ -1907,6 +1907,37 @@ Transform:
   - {fileID: 989571156}
   m_Father: {fileID: 503621258}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &137705332
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 137705333}
+  m_Layer: 0
+  m_Name: SpawnPoint (1)
+  m_TagString: SpawnPoint
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &137705333
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 137705332}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -26.18, y: 8.59, z: 34.019}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &138431389
 GameObject:
   m_ObjectHideFlags: 0
@@ -4276,8 +4307,6 @@ Mesh:
     offset: 0
     size: 0
     path: 
-
-
 --- !u!1 &407106193
 GameObject:
   m_ObjectHideFlags: 0
@@ -4570,7 +4599,6 @@ Light:
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
-
 --- !u!1 &451058463
 GameObject:
   m_ObjectHideFlags: 0
@@ -4603,7 +4631,6 @@ Transform:
   - {fileID: 641636624}
   m_Father: {fileID: 1705344710}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-
 --- !u!1 &459240815
 GameObject:
   m_ObjectHideFlags: 0
@@ -4795,7 +4822,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 420bb8328ec16e94686bfabc9332b842, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-
 --- !u!1 &462152131
 GameObject:
   m_ObjectHideFlags: 0
@@ -6756,7 +6782,7 @@ MonoBehaviour:
   flashbangAudioSource: {fileID: 0}
   flashbangClip: {fileID: 0}
   audioFadeOutTime: 0.8
-  targetCamera: {fileID: 4743313901410264838}
+  targetCamera: {fileID: 0}
 --- !u!65 &700911909
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7132,7 +7158,7 @@ MonoBehaviour:
   flashbangAudioSource: {fileID: 0}
   flashbangClip: {fileID: 0}
   audioFadeOutTime: 0.8
-  targetCamera: {fileID: 4743313901410264838}
+  targetCamera: {fileID: 0}
 --- !u!65 &741117196
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -8249,7 +8275,7 @@ VideoPlayer:
   m_VideoClip: {fileID: 32900000, guid: abe5719de50273944a7f2021b07961a5, type: 3}
   m_TargetCameraAlpha: 1
   m_TargetCamera3DLayout: 0
-  m_TargetCamera: {fileID: 4743313901410264838}
+  m_TargetCamera: {fileID: 0}
   m_TargetTexture: {fileID: 0}
   m_TimeReference: 0
   m_TargetMaterialRenderer: {fileID: 0}
@@ -10253,7 +10279,7 @@ VideoPlayer:
   m_VideoClip: {fileID: 32900000, guid: d886d87467e09f44da1347ff38dfd486, type: 3}
   m_TargetCameraAlpha: 1
   m_TargetCamera3DLayout: 0
-  m_TargetCamera: {fileID: 4743313901410264838}
+  m_TargetCamera: {fileID: 0}
   m_TargetTexture: {fileID: 0}
   m_TimeReference: 0
   m_TargetMaterialRenderer: {fileID: 0}
@@ -13163,7 +13189,7 @@ MonoBehaviour:
   flashbangAudioSource: {fileID: 0}
   flashbangClip: {fileID: 0}
   audioFadeOutTime: 0.8
-  targetCamera: {fileID: 4743313901410264838}
+  targetCamera: {fileID: 0}
 --- !u!65 &1326081203
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -19909,7 +19935,7 @@ MonoBehaviour:
   skipIndicatorTextUI: {fileID: 1689618476}
   typingUI: {fileID: 1287372027}
   audioSource: {fileID: 375978154}
-  playerMovement: {fileID: 6341754012631478050}
+  playerMovement: {fileID: 0}
   mouseLook: {fileID: 0}
 --- !u!4 &1972780725
 Transform:
@@ -22463,7 +22489,6 @@ MonoBehaviour:
   m_BeforeTransparentBundles: []
   m_BeforeStackBundles: []
   m_AfterStackBundles: []
-
 --- !u!114 &1390267938873863215
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22484,8 +22509,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7984447004342190311}
   m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
-
-
 --- !u!136 &2190399671649985077
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -22695,7 +22718,6 @@ MonoBehaviour:
   walkStepRate: 0.5
   sprintStepRate: 0.35
   crouchStepRate: 0.8
-
 --- !u!1 &3451962881175128076
 GameObject:
   m_ObjectHideFlags: 0
@@ -22813,8 +22835,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
-
-
 --- !u!20 &4743313901410264838
 Camera:
   m_ObjectHideFlags: 0
@@ -22901,7 +22921,7 @@ MonoBehaviour:
   crouchSmooth: 20
   groundCheckDistance: 0.2
   pushForce: 5
-
+  coyoteTime: 0.15
 --- !u!65 &6812517669494703516
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -22939,9 +22959,6 @@ Transform:
   - {fileID: 9140202572664810929}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-
-  coyoteTime: 0.15
-
 --- !u!1 &7984447004342190311
 GameObject:
   m_ObjectHideFlags: 0
@@ -22955,6 +22972,8 @@ GameObject:
   - component: {fileID: 3442642908800554659}
   - component: {fileID: 6341754012631478050}
   - component: {fileID: 466943428355491457}
+  - component: {fileID: 1481585365938892981}
+  - component: {fileID: 4105196682014132711}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -23008,13 +23027,7 @@ SceneRoots:
   - {fileID: 817815762}
   - {fileID: 977603958}
   - {fileID: 667486832}
+  - {fileID: 137705333}
   - {fileID: 2067150124}
-
   - {fileID: 7097113279892520099}
-  - {fileID: 1743665292}
-  - {fileID: 338938523}
-  - {fileID: 1864605868}
-  - {fileID: 2055674114}
-
-
   - {fileID: 2069009561}
