@@ -29,6 +29,7 @@ public class TutorialManager : MonoBehaviour
     [Header("References")]
     public TypingTextUI typingUI;
     public AudioSource audioSource;
+    public BackgroundMusicDucker backgroundMusic;
     public PlayerMovement playerMovement;
     public MouseLook mouseLook;
 
@@ -54,35 +55,30 @@ public class TutorialManager : MonoBehaviour
 
     void Start()
     {
-        // Skip tutorial in multiplayer mode - it's designed for single player
         if (MainMenuManager.IsMultiplayer)
         {
-            Debug.Log("TutorialManager: Skipping tutorial in multiplayer mode.");
             enabled = false;
             return;
         }
 
         if (playerMovement == null || typingUI == null)
         {
-            // Try to find references if not set
             if (playerMovement == null)
                 playerMovement = FindObjectOfType<PlayerMovement>();
             if (typingUI == null)
                 typingUI = FindObjectOfType<TypingTextUI>();
-            
-            // If still missing, disable gracefully
+
             if (playerMovement == null || typingUI == null)
             {
-                Debug.LogWarning("TutorialManager: Missing required references. Tutorial disabled.");
                 enabled = false;
                 return;
             }
         }
 
-        baseWalkSpeed    = playerMovement.walkSpeed;
-        baseSprintSpeed  = playerMovement.sprintSpeed;
-        baseCrouchSpeed  = playerMovement.crouchSpeed;
-        baseJumpHeight   = playerMovement.jumpHeight;
+        baseWalkSpeed = playerMovement.walkSpeed;
+        baseSprintSpeed = playerMovement.sprintSpeed;
+        baseCrouchSpeed = playerMovement.crouchSpeed;
+        baseJumpHeight = playerMovement.jumpHeight;
         baseCrouchHeight = playerMovement.crouchHeight;
 
         if (skipIndicatorTextUI != null)
@@ -136,16 +132,6 @@ public class TutorialManager : MonoBehaviour
         }
     }
 
-    void UpdateSkipIndicator()
-    {
-        if (skipIndicatorTextUI == null)
-            return;
-
-        float remaining = Mathf.Max(0f, holdToSkipTime - skipTimer);
-        skipIndicatorTextUI.text =
-            $"{skipIndicatorText} ({remaining:F1}s)";
-    }
-
     void CancelSkip()
     {
         isSkipping = false;
@@ -169,6 +155,8 @@ public class TutorialManager : MonoBehaviour
         typingUI.Clear();
         audioSource?.Stop();
 
+        backgroundMusic?.UnregisterSound();
+
         if (skipIndicatorTextUI != null)
         {
             skipIndicatorTextUI.text = "";
@@ -179,6 +167,16 @@ public class TutorialManager : MonoBehaviour
         ApplyAbilityLocks();
     }
 
+    void UpdateSkipIndicator()
+    {
+        if (skipIndicatorTextUI == null)
+            return;
+
+        float remaining = Mathf.Max(0f, holdToSkipTime - skipTimer);
+        skipIndicatorTextUI.text =
+            $"{skipIndicatorText} ({remaining:F1}s)";
+    }
+
     // ================= CORE =================
 
     void ApplyAbilityLocks()
@@ -186,11 +184,11 @@ public class TutorialManager : MonoBehaviour
         if (playerMovement == null)
             return;
 
-        playerMovement.walkSpeed   = allowMove ? baseWalkSpeed : 0f;
+        playerMovement.walkSpeed = allowMove ? baseWalkSpeed : 0f;
         playerMovement.sprintSpeed = allowMove ? baseSprintSpeed : 0f;
         playerMovement.crouchSpeed = allowMove ? baseCrouchSpeed : 0f;
 
-        playerMovement.jumpHeight  = allowJump ? baseJumpHeight : 0f;
+        playerMovement.jumpHeight = allowJump ? baseJumpHeight : 0f;
         playerMovement.crouchHeight =
             allowCrouch ? baseCrouchHeight : playerMovement.standingHeight;
 
@@ -227,11 +225,17 @@ public class TutorialManager : MonoBehaviour
         typingUI.ForceEnable();
 
         typingUI.PlayText(step.text, step.typingSpeed);
-        if (step.audio) audioSource?.PlayOneShot(step.audio);
+
+        if (step.audio)
+        {
+            backgroundMusic?.RegisterSound();
+            audioSource?.PlayOneShot(step.audio);
+        }
 
         while (typingUI.IsTyping && !tutorialSkipped)
             yield return null;
 
+        backgroundMusic?.UnregisterSound();
         yield return new WaitForSeconds(step.delayAfterText);
 
         if (!waitForCondition)
@@ -240,9 +244,9 @@ public class TutorialManager : MonoBehaviour
         switch (step.condition)
         {
             case TutorialCondition.LookAround: allowLook = true; break;
-            case TutorialCondition.Move:       allowMove = true; break;
-            case TutorialCondition.Jump:       allowJump = true; break;
-            case TutorialCondition.Crouch:     allowCrouch = true; break;
+            case TutorialCondition.Move: allowMove = true; break;
+            case TutorialCondition.Jump: allowJump = true; break;
+            case TutorialCondition.Crouch: allowCrouch = true; break;
         }
 
         ApplyAbilityLocks();
@@ -256,11 +260,17 @@ public class TutorialManager : MonoBehaviour
         if (!string.IsNullOrEmpty(step.completionText))
         {
             typingUI.PlayText(step.completionText, step.completionTypingSpeed);
-            if (step.completionAudio) audioSource?.PlayOneShot(step.completionAudio);
+
+            if (step.completionAudio)
+            {
+                backgroundMusic?.RegisterSound();
+                audioSource?.PlayOneShot(step.completionAudio);
+            }
 
             while (typingUI.IsTyping)
                 yield return null;
 
+            backgroundMusic?.UnregisterSound();
             yield return new WaitForSeconds(step.completionDelay);
         }
 
@@ -271,11 +281,17 @@ public class TutorialManager : MonoBehaviour
     IEnumerator PlayFinalCompletion()
     {
         typingUI.PlayText(finalCompletionMessage, finalCompletionTypingSpeed);
-        if (finalCompletionAudio) audioSource?.PlayOneShot(finalCompletionAudio);
+
+        if (finalCompletionAudio)
+        {
+            backgroundMusic?.RegisterSound();
+            audioSource?.PlayOneShot(finalCompletionAudio);
+        }
 
         while (typingUI.IsTyping)
             yield return null;
 
+        backgroundMusic?.UnregisterSound();
         yield return new WaitForSeconds(finalCompletionDelay);
         typingUI.Clear();
     }
