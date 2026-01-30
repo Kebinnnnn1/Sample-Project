@@ -3119,7 +3119,7 @@ GameObject:
   - component: {fileID: 786446324}
   - component: {fileID: 786446323}
   - component: {fileID: 786446329}
-  - component: {fileID: 786446328}
+  - component: {fileID: 786446330}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -3209,34 +3209,6 @@ Transform:
   - {fileID: 248519514}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &786446328
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 786446322}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f03a77ba8c0d2e478be7eface01b757, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  walkSpeed: 4
-  sprintSpeed: 7
-  crouchSpeed: 2
-  acceleration: 7
-  jumpHeight: 1.5
-  gravity: -20
-  autoJumpCheckDistance: 0.6
-  obstacleLayer:
-    serializedVersion: 2
-    m_Bits: 0
-  crouchHeight: 1
-  standingHeight: 2
-  crouchSmooth: 8
-  groundCheckDistance: 0.2
-  pushForce: 5
-  coyoteTime: 0.15
 --- !u!136 &786446329
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -3260,6 +3232,34 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &786446330
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 786446322}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7b8523fad967df4691eab65bfe9da4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  walkSpeed: 3
+  sprintSpeed: 5.5
+  crouchSpeed: 2
+  acceleration: 7
+  jumpHeight: 1.5
+  gravity: -20
+  autoJumpCheckDistance: 0.6
+  obstacleLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  crouchHeight: 1
+  standingHeight: 2
+  crouchSmooth: 8
+  groundCheckDistance: 0.2
+  pushForce: 5
+  coyoteTime: 0.15
 --- !u!1 &793887125
 GameObject:
   m_ObjectHideFlags: 0

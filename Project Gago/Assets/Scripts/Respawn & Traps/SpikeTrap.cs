@@ -12,6 +12,16 @@ public class SpikeTrap : MonoBehaviour
     [Header("Sound")]
     public AudioSource spikeMoveSound;
 
+    [Tooltip("Enable 3D spatial sound")]
+    public bool spatialSound = true;
+
+    [Range(0f, 1f)]
+    public float maxVolume = 1f;
+
+    [Tooltip("Extra loudness multiplier")]
+    [Range(0.1f, 3f)]
+    public float loudness = 1.2f;
+
     private Vector3 startPos;
     private Vector3 targetPos;
     private bool triggered = false;
@@ -22,27 +32,40 @@ public class SpikeTrap : MonoBehaviour
     {
         startPos = spike.position;
         targetPos = startPos + moveOffset;
+
+        SetupAudio();
+    }
+
+    void SetupAudio()
+    {
+        if (spikeMoveSound == null) return;
+
+        spikeMoveSound.playOnAwake = false;
+
+        // Spatial or 2D
+        spikeMoveSound.spatialBlend = spatialSound ? 1f : 0f;
+
+        // Apply loudness & volume
+        spikeMoveSound.volume = Mathf.Clamp(maxVolume * loudness, 0f, 1f);
     }
 
     void Update()
     {
         if (!moving) return;
 
-        // Move spike
         spike.position = Vector3.MoveTowards(
             spike.position,
             targetPos,
             moveSpeed * Time.deltaTime
         );
 
-        // Play sound ONCE when movement starts
+        // Play sound once when movement starts
         if (!soundPlayed && spikeMoveSound != null)
         {
             spikeMoveSound.Play();
             soundPlayed = true;
         }
 
-        // Reached target
         if (Vector3.Distance(spike.position, targetPos) < 0.01f)
         {
             moving = false;

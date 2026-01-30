@@ -7,6 +7,8 @@ TagManager:
   - Platform
   - Boulder
   - BoulderDestroy
+  - Bullet
+  - SpawnPoint
   layers:
   - Default
   - TransparentFX
