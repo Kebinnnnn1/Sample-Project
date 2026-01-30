@@ -98,6 +98,10 @@ public class RespawnManager : MonoBehaviour
         foreach (SpikeTrap trap in FindObjectsOfType<SpikeTrap>())
             trap.ResetTrap();
 
+            // 🔁 RESET MONSTERS (THIS IS THE KEY ADDITION)
+        foreach (ChaseCharacter monster in FindObjectsOfType<ChaseCharacter>())
+            monster.ResetMonster();
+
         // Disable movement
         CharacterController cc = player.GetComponent<CharacterController>();
         Rigidbody rb = player.GetComponent<Rigidbody>();

@@ -1,71 +1,82 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class ChaseCharacter : MonoBehaviour
 {
     [Header("References")]
-    public Transform player;           // Reference to the player's transform
-    public Animator animator;          // Reference to the enemy's Animator component
-    public AudioSource audioSource;    // Audio source for monster sounds
+    public Transform player;
+    public Animator animator;
+    public AudioSource audioSource;
+    public PlayerDeath playerDeath;   // 🔥 use your existing death system
 
     [Header("Movement Settings")]
-    public float moveSpeed = 5f;       // The enemy's move speed
-    public float rotationSpeed = 5f;   // The speed at which the enemy rotates
-    public float chaseRange = 10f;     // The distance at which the enemy starts chasing the player
-    public float deathRange = .75f;    // The distance at which the enemy catches the player
-    public float groundHeight = 0f;    // The fixed ground height for the enemy (e.g., 0 for ground level)
+    public float moveSpeed = 5f;
+    public float rotationSpeed = 5f;
+    public float chaseRange = 10f;
+    public float deathRange = 0.75f;
+    public float groundHeight = 0f;
 
     [Header("Audio Clips")]
-    public AudioClip runningSound;     // Loop sound for running
-    public AudioClip[] growlSounds;    // Random growls while chasing
+    public AudioClip runningSound;
+    public AudioClip[] growlSounds;
 
-    private bool isPlayingRunSound = false;
-    private float nextGrowlTime = 0f;
+    private bool isPlayingRunSound;
+    private float nextGrowlTime;
+    private Vector3 startPosition;
+private Quaternion startRotation;
 
+    private void Start()
+{
+    startPosition = transform.position;
+    startRotation = transform.rotation;
+}
     private void Update()
     {
+        if (player == null) return;
+
         float distance = Vector3.Distance(player.position, transform.position);
 
-        ChasePlayer(distance); 
-        PlayerDeath(distance);  
-    }
-
-    private void PlayerDeath(float distance)
-    {
-        if (distance < deathRange)
+        if (distance <= deathRange)
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            if (playerDeath != null)
+                playerDeath.Die();
+            return;
         }
+
+        HandleChase(distance);
     }
 
-    private void ChasePlayer(float distance)
+    private void HandleChase(float distance)
     {
-        // Always lock enemy to ground height
-        Vector3 currentPosition = transform.position;
-        currentPosition.y = groundHeight;
+        Vector3 currentPos = transform.position;
+        currentPos.y = groundHeight;
 
-        if (distance < chaseRange)
+        if (distance <= chaseRange)
         {
-            // Calculate the direction towards the player (ignoring vertical movement)
             Vector3 targetPos = player.position;
             targetPos.y = groundHeight;
 
-            Vector3 direction = (targetPos - currentPosition).normalized;
+            Vector3 dir = (targetPos - currentPos).normalized;
 
-            // Move the enemy towards the grounded player position
-            transform.position = Vector3.MoveTowards(currentPosition, targetPos, moveSpeed * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(
+                currentPos,
+                targetPos,
+                moveSpeed * Time.deltaTime
+            );
 
-            // Rotate smoothly towards the player
-            if (direction != Vector3.zero)
+            if (dir != Vector3.zero)
             {
-                Quaternion lookRotation = Quaternion.LookRotation(direction);
-                transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, rotationSpeed * Time.deltaTime);
+                Quaternion rot = Quaternion.LookRotation(dir);
+                transform.rotation = Quaternion.Slerp(
+                    transform.rotation,
+                    rot,
+                    rotationSpeed * Time.deltaTime
+                );
             }
 
+            // 🎬 Animation
+            animator.SetBool("isRunning", true);
 
-            // 🔊 Play running sound loop
+            // 🔊 Running loop
             if (!isPlayingRunSound && runningSound != null)
             {
                 audioSource.clip = runningSound;
@@ -74,21 +85,21 @@ public class ChaseCharacter : MonoBehaviour
                 isPlayingRunSound = true;
             }
 
-            // 🔊 Play random growls sometimes
-            if (growlSounds.Length > 0 && Time.time > nextGrowlTime)
+            // 👹 Growls
+            if (growlSounds.Length > 0 && Time.time >= nextGrowlTime)
             {
-                AudioClip growl = growlSounds[Random.Range(0, growlSounds.Length)];
-                audioSource.PlayOneShot(growl);
-                nextGrowlTime = Time.time + Random.Range(3f, 6f); // growl every 3–6 seconds
+                audioSource.PlayOneShot(
+                    growlSounds[Random.Range(0, growlSounds.Length)]
+                );
+                nextGrowlTime = Time.time + Random.Range(3f, 6f);
             }
         }
         else
         {
-            // Stay grounded in idle state
-            transform.position = currentPosition;
+            transform.position = currentPos;
+
             animator.SetBool("isRunning", false);
 
-            // 🔇 Stop running loop sound
             if (isPlayingRunSound)
             {
                 audioSource.Stop();
@@ -96,4 +107,26 @@ public class ChaseCharacter : MonoBehaviour
             }
         }
     }
+    public void ResetMonster()
+{
+    transform.position = startPosition;
+    transform.rotation = startRotation;
+
+    // stop animation
+    if (animator != null)
+        animator.SetBool("isRunning", false);
+
+    // stop audio
+    if (audioSource != null)
+        audioSource.Stop();
+
+    // stop physics movement if any
+    Rigidbody rb = GetComponent<Rigidbody>();
+    if (rb != null)
+    {
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+    }
+}
+
 }
