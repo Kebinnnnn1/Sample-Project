@@ -1,19 +1,24 @@
 using UnityEngine;
 
-[RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(CapsuleCollider))]
 public class PlayerMovement2 : MonoBehaviour
 {
     [Header("Movement")]
     public float walkSpeed = 4f;
     public float sprintSpeed = 7f;
     public float crouchSpeed = 2f;
-    public float acceleration = 10f;
+
+    [Tooltip("How fast we accelerate toward target speed")]
+    public float groundAcceleration = 25f;
+    public float airAcceleration = 8f;
 
     [Header("Jumping & Gravity")]
     public float jumpHeight = 1.5f;
-    public float gravity = -20f;
-    public float autoJumpCheckDistance = 0.6f;
-    public LayerMask obstacleLayer;
+    public float gravity = -25f;
+
+    [Header("Double Jump")]
+    public int maxJumps = 2;
 
     [Header("Crouch")]
     public float crouchHeight = 1f;
@@ -21,114 +26,165 @@ public class PlayerMovement2 : MonoBehaviour
     public float crouchSmooth = 8f;
 
     [Header("Ground Check")]
-    public float groundCheckDistance = 0.2f;
-
-    [Header("Physics Interaction")]
-    public float pushForce = 5f;
+    public float groundCheckDistance = 0.25f;
+    public LayerMask groundLayer;
 
     [Header("Jump Reliability")]
-public float coyoteTime = 0.15f;
-float coyoteTimer;
+    public float coyoteTime = 0.15f;
 
-    CharacterController controller;
-    Vector3 velocity;
-    Vector3 moveVelocity;
+    Rigidbody rb;
+    CapsuleCollider col;
 
+    Vector3 inputDir;
     bool isGrounded;
     bool isCrouching;
 
+    float coyoteTimer;
+    int jumpsRemaining;
+
     MovingPlatform currentPlatform;
+    Vector3 platformLastPos;
 
     void Awake()
     {
-        controller = GetComponent<CharacterController>();
+        rb = GetComponent<Rigidbody>();
+        col = GetComponent<CapsuleCollider>();
+
+        rb.freezeRotation = true;
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
+        rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+
+        col.height = standingHeight;
+        col.center = Vector3.up * standingHeight * 0.5f;
+
+        jumpsRemaining = maxJumps;
     }
 
     void Update()
     {
+        ReadInput();
         GroundCheck();
         Crouch();
-        Move();
-        GravityAndJump();
-        AutoJump();
-        ApplyPlatformMovement();
+        HandleJump();
+    }
+
+    void FixedUpdate()
+    {
+        MoveSmooth();
+        ApplyExtraGravity();
+        ApplyPlatformMotion();
     }
 
     // =============================
-    // MOVEMENT
+    // INPUT
     // =============================
-    void Move()
+    void ReadInput()
     {
         float x = Input.GetAxisRaw("Horizontal");
         float z = Input.GetAxisRaw("Vertical");
 
-        Vector3 input = (transform.right * x + transform.forward * z).normalized;
-
-        bool sprintInput = Input.GetKey(KeyCode.LeftShift);
-        bool sprinting = sprintInput && !isCrouching && input.magnitude > 0.1f;
-
-        float speed = walkSpeed;
-        if (isCrouching) speed = crouchSpeed;
-        else if (sprinting) speed = sprintSpeed;
-
-        Vector3 targetVelocity = input * speed;
-        moveVelocity = Vector3.Lerp(
-            moveVelocity,
-            targetVelocity,
-            acceleration * Time.deltaTime
-        );
-
-        controller.Move(moveVelocity * Time.deltaTime);
+        inputDir = (transform.right * x + transform.forward * z).normalized;
     }
 
     // =============================
-    // GRAVITY & JUMP
+    // SMOOTH MOVEMENT
     // =============================
-    void GravityAndJump()
+    void MoveSmooth()
     {
-        if (isGrounded && velocity.y < 0)
-            velocity.y = -2f;
+        float speed = walkSpeed;
 
-        if (Input.GetKeyDown(KeyCode.Space) && coyoteTimer > 0f && !isCrouching)
+        if (isCrouching) speed = crouchSpeed;
+        else if (Input.GetKey(KeyCode.LeftShift) && inputDir.magnitude > 0.1f)
+            speed = sprintSpeed;
 
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        Vector3 targetVelocity = inputDir * speed;
+        Vector3 currentVelocity = rb.velocity;
+
+        Vector3 horizontalVel = new Vector3(currentVelocity.x, 0f, currentVelocity.z);
+        Vector3 velocityDiff = targetVelocity - horizontalVel;
+
+        float accel = isGrounded ? groundAcceleration : airAcceleration;
+
+        rb.AddForce(velocityDiff * accel, ForceMode.Acceleration);
+
+        // Clamp horizontal speed (prevents sprint jitter)
+        Vector3 clamped = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
+        if (clamped.magnitude > speed)
+        {
+            clamped = clamped.normalized * speed;
+            rb.velocity = new Vector3(clamped.x, rb.velocity.y, clamped.z);
+        }
+    }
+
+    // =============================
+    // JUMP + DOUBLE JUMP
+    // =============================
+    void HandleJump()
+    {
+        if (isGrounded)
+        {
+            coyoteTimer = coyoteTime;
+            jumpsRemaining = maxJumps;
+        }
+        else
+        {
+            coyoteTimer -= Time.deltaTime;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space) &&
+            jumpsRemaining > 0 &&
+            !isCrouching &&
+            jumpHeight > 0f)
+        {
+            if (!isGrounded && jumpsRemaining == maxJumps && coyoteTimer <= 0f)
+                return;
+
+            float jumpVel = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            rb.velocity = new Vector3(rb.velocity.x, jumpVel, rb.velocity.z);
+
+            jumpsRemaining--;
             coyoteTimer = 0f;
+        }
+    }
 
-        velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
+    // =============================
+    // GRAVITY (BETTER FALL)
+    // =============================
+    void ApplyExtraGravity()
+    {
+        if (!isGrounded)
+            rb.AddForce(Vector3.up * gravity, ForceMode.Acceleration);
     }
 
     // =============================
     // GROUND CHECK
     // =============================
-   void GroundCheck()
-{
-    bool groundedByController = controller.isGrounded;
-
-    bool groundedBySphere = Physics.SphereCast(
-        transform.position + Vector3.up * 0.1f,
-        controller.radius * 0.9f,
-        Vector3.down,
-        out RaycastHit hit,
-        controller.height / 2 + groundCheckDistance
-    );
-
-    isGrounded = groundedByController || groundedBySphere;
-
-    if (isGrounded)
+    void GroundCheck()
     {
-        coyoteTimer = coyoteTime;
-        currentPlatform = hit.collider != null
-            ? hit.collider.GetComponentInParent<MovingPlatform>()
-            : null;
-    }
-    else
-    {
-        coyoteTimer -= Time.deltaTime;
-        if (coyoteTimer <= 0f)
+        Vector3 origin = transform.position + Vector3.up * 0.1f;
+        float radius = col.radius * 0.95f;
+
+        isGrounded = Physics.SphereCast(
+            origin,
+            radius,
+            Vector3.down,
+            out RaycastHit hit,
+            col.bounds.extents.y + groundCheckDistance,
+            groundLayer
+        );
+
+        if (isGrounded)
+        {
+            currentPlatform = hit.collider.GetComponentInParent<MovingPlatform>();
+            platformLastPos = currentPlatform
+                ? currentPlatform.transform.position
+                : Vector3.zero;
+        }
+        else
+        {
             currentPlatform = null;
+        }
     }
-}
 
     // =============================
     // CROUCH
@@ -138,60 +194,48 @@ float coyoteTimer;
         isCrouching = Input.GetKey(KeyCode.LeftControl);
 
         float targetHeight = isCrouching ? crouchHeight : standingHeight;
-        controller.height = Mathf.Lerp(
-            controller.height,
-            targetHeight,
-            crouchSmooth * Time.deltaTime
-        );
+        col.height = Mathf.Lerp(col.height, targetHeight, crouchSmooth * Time.deltaTime);
+        col.center = Vector3.up * col.height * 0.5f;
     }
 
     // =============================
-    // AUTO JUMP
+    // MOVING PLATFORM
     // =============================
-    void AutoJump()
+    void ApplyPlatformMotion()
     {
-        if (!isGrounded || moveVelocity.magnitude < 0.1f || isCrouching)
-            return;
+        if (currentPlatform == null) return;
 
-        RaycastHit hit;
-        Vector3 origin = transform.position + Vector3.up * 0.3f;
+        Vector3 delta = currentPlatform.transform.position - platformLastPos;
+        rb.position += delta;
+        platformLastPos = currentPlatform.transform.position;
+    }
 
-        if (Physics.Raycast(origin, transform.forward, out hit, autoJumpCheckDistance, obstacleLayer))
+    // =============================
+    // WALL STICK FIX
+    // =============================
+    void OnCollisionStay(Collision collision)
+    {
+        if (isGrounded) return;
+
+        foreach (var contact in collision.contacts)
         {
-            float obstacleHeight = hit.collider.bounds.max.y - transform.position.y;
-            if (obstacleHeight > 0.3f && obstacleHeight < 1.2f)
-                velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            Vector3 normal = contact.normal;
+
+            // Wall (mostly horizontal normal)
+            if (Mathf.Abs(normal.y) < 0.2f)
+            {
+                Vector3 vel = rb.velocity;
+                Vector3 intoWall = Vector3.Project(vel, -normal);
+                rb.velocity = vel - intoWall;
+            }
         }
     }
 
     // =============================
-    // PUSH RIGIDBODIES
-    // =============================
-    void OnControllerColliderHit(ControllerColliderHit hit)
-    {
-        Rigidbody rb = hit.collider.attachedRigidbody;
-        if (rb == null || rb.isKinematic) return;
-        if (hit.moveDirection.y < -0.3f) return;
-        if (moveVelocity.magnitude < 0.1f) return;
-
-        Vector3 pushDir = new Vector3(hit.moveDirection.x, 0f, hit.moveDirection.z).normalized;
-        float speedFactor = Mathf.Clamp01(moveVelocity.magnitude / sprintSpeed);
-
-        rb.AddForce(pushDir * pushForce * speedFactor, ForceMode.Force);
-    }
-
-
-    void ApplyPlatformMovement()
-{
-    if (currentPlatform == null) return;
-
-    controller.Move(currentPlatform.DeltaMovement);
-}
-    // =============================
     // PUBLIC STATES
     // =============================
     public bool IsGrounded => isGrounded;
-    public bool IsMoving => moveVelocity.magnitude > 0.1f;
+    public bool IsMoving => inputDir.magnitude > 0.1f;
     public bool IsCrouching => isCrouching;
     public bool IsSprinting =>
         Input.GetKey(KeyCode.LeftShift) &&
