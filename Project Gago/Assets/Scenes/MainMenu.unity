@@ -318,7 +318,6 @@ GameObject:
   m_Component:
   - component: {fileID: 550192017}
   - component: {fileID: 550192016}
-  - component: {fileID: 550192018}
   m_Layer: 0
   m_Name: Menu
   m_TagString: Untagged
@@ -342,7 +341,7 @@ MonoBehaviour:
   gameSceneName: Tutorial
   numberOfStars: 100
   starTwinkleSpeed: 2
-  menuMusic: {fileID: 8300000, guid: 385ef6cf074c29a01854d66fb89f37f3, type: 3}
+  menuMusic: {fileID: 8300000, guid: 607c90b5a1c9eb77ab41229b1c7b4bdb, type: 3}
   clickSound: {fileID: 8300000, guid: 4b7e0c9ae0681273ca1dc8117733f3a8, type: 3}
   hoverSound: {fileID: 8300000, guid: 4b7e0c9ae0681273ca1dc8117733f3a8, type: 3}
   backgroundColor: {r: 0, g: 0, b: 0, a: 1}
@@ -364,95 +363,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &550192018
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 550192015}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8efca38242d7e170fa4225ae15150aab, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  modeSelectionPanel: {fileID: 0}
-  multiplayerLobbyPanel: {fileID: 0}
-  backgroundColor: {r: 0, g: 0, b: 0, a: 0.95}
-  textColor: {r: 1, g: 1, b: 1, a: 1}
-  buttonBorderColor: {r: 1, g: 1, b: 1, a: 1}
-  buttonHoverColor: {r: 0.3, g: 0.3, b: 0.3, a: 1}
-  inputFieldColor: {r: 0.1, g: 0.1, b: 0.1, a: 1}
-  gameSceneName: Tutorial
-  sfxSource: {fileID: 0}
-  clickSound: {fileID: 0}
---- !u!1 &911973999
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 911974002}
-  - component: {fileID: 911974001}
-  - component: {fileID: 911974000}
-  m_Layer: 0
-  m_Name: NetworkManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &911974000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 911973999}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bf4272c92f9d170fe89eaa394396a1a0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  defaultRoomName: GameRoom
-  maxPlayersPerRoom: 2
-  autoJoinRoom: 1
-  gameSceneName: 'Starting. . . '
-  playerPrefabName: NetworkPlayer
-  spawnPoint: {fileID: 0}
-  showDebugLogs: 1
---- !u!114 &911974001
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 911973999}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c6c9e9f9537da75bba102487ceeafb83, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  autoConnect: 1
-  gameVersion: 1.0
-  showDebugLogs: 1
---- !u!4 &911974002
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 911973999}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 55.685978, y: -76.356064, z: -14.735642}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -460,4 +370,3 @@ SceneRoots:
   - {fileID: 197470156}
   - {fileID: 304782995}
   - {fileID: 550192017}
-  - {fileID: 911974002}
