@@ -13119,7 +13119,7 @@ MonoBehaviour:
   riseSpeed: 0.75
   startDelay: 5
   ui: {fileID: 2011271490}
-  cameraShake: {fileID: 0}
+  cameraShake: {fileID: 248519520}
   audioSource: {fileID: 8594693239814517004}
   warningClip: {fileID: 8300000, guid: f84e9923b824a6f4994c74ad855d0bf5, type: 3}
 --- !u!33 &8662739923083704172
